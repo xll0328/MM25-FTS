@@ -52,7 +52,7 @@ where $\mathcal{L}_{\mathrm{reg}}$ is the regression loss, $\mathcal{L}_{\mathrm
 
 ## Method
 
-**TimeSieve** uses wavelet decomposition (approximation \(\pi_a\), detail \(\pi_d\)) and an Information Filtering and Compression Block (IFCB) with IB loss. FTS adds:
+**TimeSieve** uses wavelet decomposition (approximation $\pi_a$, detail $\pi_d$) and an Information Filtering and Compression Block (IFCB) with IB loss. FTS adds:
 
 - **Objective:** Minimize $\mathbb{E}_x[\lambda_1 \mathcal{L}_{\mathrm{sib}} + \lambda_2 \mathcal{L}_{\mathrm{cps}} + \lambda_3 \mathcal{L}_{\mathrm{snp}}]$ over $\tilde{\omega}$, where $\mathcal{L}_{\mathrm{sib}}$ corresponds to $D_1(\hat{\pi}_a(\cdot), \hat{\pi}_a(\cdot+\delta))$ (and similarly for $\hat{\pi}_d$); $\mathcal{L}_{\mathrm{cps}}$ to $D_2(y(x,\tilde{\omega}), y(x,\omega))$; $\mathcal{L}_{\mathrm{snp}}$ to $D_3(y(x,\tilde{\omega}), y(x+\delta,\tilde{\omega}))$.
 - **PGD step:** At iteration $p$, update perturbation $\delta_p$ by gradient ascent on the sum of these distances, then project to $\|\delta\| \leq R$; then update $\tilde{\omega}$ by gradient descent on $\mathcal{L}_{\mathrm{reg}} + \mathcal{L}_{\mathrm{IB}} + \lambda_1 \mathcal{L}_{\mathrm{sib}} + \lambda_2 \mathcal{L}_{\mathrm{cps}} + \lambda_3 \mathcal{L}_{\mathrm{snp}}$.
@@ -112,9 +112,9 @@ Full combination $\mathcal{L}_{\mathrm{total}} = \mathcal{L}_{\mathrm{reg}} + \m
 
 | Description | Figure |
 |-------------|--------|
-| **TS vs FTS under 10 random seeds** (Wiki/ETTh1/Exchange) | ![first_per](figures/first_per.png) |
-| **FTS framework** | ![framework](figures/model.png) |
-| **Heatmaps (Wiki, H=48,96,144,192)** | See [project page](https://xll0328.github.io/fts/) for full heatmaps. |
+| **Figure 1: Ten different random seeds** — TS vs FTS (paper Fig. 1) | ![fig1](figures/fig1.png) |
+| **Framework of our proposed FTS** (paper framework figure) | ![framework](figures/framework.png) |
+| **Heatmaps** — prediction length 48, 96, 144, 192 (paper) | See [project page](https://xll0328.github.io/fts/) for heatmaps. |
 
 ---
 
