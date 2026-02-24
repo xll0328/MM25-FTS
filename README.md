@@ -13,26 +13,35 @@
 
 ---
 
+## Framework (from paper)
+
+<p align="center">
+  <img src="figures/framework.png" alt="FTS framework" width="90%" />
+</p>
+<p align="center"><strong>Framework of our proposed Faithful TimeSieve (FTS).</strong></p>
+
+---
+
 ## Overview
 
 **Faithful TimeSieve (FTS)** is an enhanced framework for improving the **reliability and robustness** of time series forecasting in multimedia-rich web settings (e.g. video streaming workloads, ad click prediction). While [TimeSieve](https://github.com/ninghuifeng/TimeSieve) achieves strong accuracy, it is sensitive to **random seeds**, **input noise**, **layer noise**, and **parameter perturbations**. FTS systematically detects and mitigates these unfaithfulness issues via a rigorous definition and three auxiliary losses:
 
-- **Similarity in IB Space (Sib)** — Filtered representations in the information-bottleneck space under perturbation stay close (within $\beta$, radius $R_1$).
-- **Consistency in Prediction Space (Cps)** — Predictions with original vs. fine-tuned weights $\tilde{\omega}$ differ by at most $\alpha_1$.
-- **Stability in Noise Perturbations (Snp)** — Predictions under input perturbation $\delta$ with $\|\delta\| \leq R_2$ differ by at most $\alpha_2$.
+- **Similarity in IB Space (Sib)** — Filtered representations in the information-bottleneck space under perturbation stay close (within β, radius R₁).
+- **Consistency in Prediction Space (Cps)** — Predictions with original vs. fine-tuned weights differ by at most α₁.
+- **Stability in Noise Perturbations (Snp)** — Predictions under input perturbation δ (‖δ‖ ≤ R₂) differ by at most α₂.
 
 The total training objective is:
 
 $$\mathcal{L} = \mathcal{L}_{\mathrm{reg}} + \mathcal{L}_{\mathrm{IB}} + \lambda_1 \mathcal{L}_{\mathrm{sib}} + \lambda_2 \mathcal{L}_{\mathrm{cps}} + \lambda_3 \mathcal{L}_{\mathrm{snp}}$$
 
-where $\mathcal{L}_{\mathrm{reg}}$ is the regression loss, $\mathcal{L}_{\mathrm{IB}}$ is the TimeSieve IB loss, and $\mathcal{L}_{\mathrm{sib}}$, $\mathcal{L}_{\mathrm{cps}}$, $\mathcal{L}_{\mathrm{snp}}$ are the faithfulness auxiliary losses. FTS uses PGD to find worst-case perturbations and batched gradient updates for parameters, achieving **SOTA** on multiple benchmarks while improving stability and consistency.
+Here **L_reg** is the regression loss, **L_IB** is the TimeSieve IB loss, and **L_sib**, **L_cps**, **L_snp** are the faithfulness auxiliary losses. FTS uses PGD to find worst-case perturbations and batched gradient updates for parameters, achieving **SOTA** on multiple benchmarks while improving stability and consistency.
 
 ---
 
 ## Key Contributions (from paper)
 
 1. **Comprehensive Faithfulness Assessment** — In-depth analysis of TimeSieve identifying factors that affect its faithfulness (random seeds, input/layer/parameter perturbations).
-2. **Definition of Faithful TimeSieve** — Rigorous $(\alpha_1, \alpha_2, \beta, \delta, R_1, R_2)$-Faithful definition with three attributes (Sib, Cps, Snp).
+2. **Definition of Faithful TimeSieve** — Rigorous (α₁, α₂, β, δ, R₁, R₂)-Faithful definition with three attributes (Sib, Cps, Snp).
 3. **Multimedia-aware Robustness Framework** — Min-max optimization with PGD and content-adaptive stabilization; framework transfers to other time series models (e.g. PatchTST).
 4. **Theoretical and Experimental Validation** — Bounds for Sib/Cps/Snp and extensive experiments on Wiki, ETTh1, Exchange; FTS achieves SOTA and strong robustness.
 
@@ -40,6 +49,7 @@ where $\mathcal{L}_{\mathrm{reg}}$ is the regression loss, $\mathcal{L}_{\mathrm
 
 ## Table of Contents
 
+- [Framework](#framework-from-paper)
 - [Method](#method)
 - [Main Results (Tables)](#main-results-tables)
 - [Installation](#installation)
@@ -52,11 +62,11 @@ where $\mathcal{L}_{\mathrm{reg}}$ is the regression loss, $\mathcal{L}_{\mathrm
 
 ## Method
 
-**TimeSieve** uses wavelet decomposition (approximation $\pi_a$, detail $\pi_d$) and an Information Filtering and Compression Block (IFCB) with IB loss. FTS adds:
+**TimeSieve** uses wavelet decomposition (approximation π_a, detail π_d) and an Information Filtering and Compression Block (IFCB) with IB loss. FTS adds:
 
-- **Objective:** Minimize $\mathbb{E}_x[\lambda_1 \mathcal{L}_{\mathrm{sib}} + \lambda_2 \mathcal{L}_{\mathrm{cps}} + \lambda_3 \mathcal{L}_{\mathrm{snp}}]$ over $\tilde{\omega}$, where $\mathcal{L}_{\mathrm{sib}}$ corresponds to $D_1(\hat{\pi}_a(\cdot), \hat{\pi}_a(\cdot+\delta))$ (and similarly for $\hat{\pi}_d$); $\mathcal{L}_{\mathrm{cps}}$ to $D_2(y(x,\tilde{\omega}), y(x,\omega))$; $\mathcal{L}_{\mathrm{snp}}$ to $D_3(y(x,\tilde{\omega}), y(x+\delta,\tilde{\omega}))$.
-- **PGD step:** At iteration $p$, update perturbation $\delta_p$ by gradient ascent on the sum of these distances, then project to $\|\delta\| \leq R$; then update $\tilde{\omega}$ by gradient descent on $\mathcal{L}_{\mathrm{reg}} + \mathcal{L}_{\mathrm{IB}} + \lambda_1 \mathcal{L}_{\mathrm{sib}} + \lambda_2 \mathcal{L}_{\mathrm{cps}} + \lambda_3 \mathcal{L}_{\mathrm{snp}}$.
-- **Lookback:** We set input length $T = 2H$ (twice the forecast horizon $H$).
+- **Objective:** Minimize the sum of L_sib, L_cps, L_snp over fine-tuned weights; L_sib ties to distance D₁ in IB space, L_cps to D₂ between predictions, L_snp to D₃ under input perturbation.
+- **PGD step:** At each iteration, update perturbation by gradient ascent on the sum of these distances (project to ‖δ‖ ≤ R), then update weights by gradient descent on the full loss.
+- **Lookback:** Input length T = 2H (twice the forecast horizon H).
 
 ---
 
@@ -64,7 +74,7 @@ where $\mathcal{L}_{\mathrm{reg}}$ is the regression loss, $\mathcal{L}_{\mathrm
 
 ### Table 1: Forecasting results (no perturbation)
 
-Forecast length $H \in \{48, 96, 144, 192\}$, lookback $T = 2H$. **Bold** = best, *italic* = second best.
+Forecast length H ∈ {48, 96, 144, 192}, lookback T = 2H. **Bold** = best, *italic* = second best.
 
 | Dataset | H | FTS (MAE / MSE) | TS (MAE / MSE) | Koopa | PatchTST | TSMixer | DLinear | NSTformer | LightTS | Autoformer |
 |---------|---|------------------|----------------|-------|----------|---------|---------|-----------|---------|------------|
@@ -104,17 +114,22 @@ NP = no perturbation, NPO = no perturbation with FTS optimization, IP = input pe
 
 ### Table 4: Loss ablation (ETTh1 & Exchange, MAE/MSE)
 
-Full combination $\mathcal{L}_{\mathrm{total}} = \mathcal{L}_{\mathrm{reg}} + \mathcal{L}_{\mathrm{IB}} + \lambda_1 \mathcal{L}_{\mathrm{sib}} + \lambda_2 \mathcal{L}_{\mathrm{cps}} + \lambda_3 \mathcal{L}_{\mathrm{snp}}$ achieves best. Removing $\mathcal{L}_{\mathrm{snp}}$, $\mathcal{L}_{\mathrm{cps}}$, or $\mathcal{L}_{\mathrm{sib}}$ degrades robustness; see paper Table 4 for all variants.
+Full combination **L_total** = L_reg + L_IB + λ₁·L_sib + λ₂·L_cps + λ₃·L_snp achieves best. Removing L_snp, L_cps, or L_sib degrades robustness; see paper Table 4 for all variants.
 
 ---
 
-## Figures (from paper)
+## Figure 1: TS vs FTS under 10 random seeds (from paper)
 
-| Description | Figure |
-|-------------|--------|
-| **Figure 1: Ten different random seeds** — TS vs FTS (paper Fig. 1) | ![fig1](figures/fig1.png) |
-| **Framework of our proposed FTS** (paper framework figure) | ![framework](figures/framework.png) |
-| **Heatmaps** — prediction length 48, 96, 144, 192 (paper) | See [project page](https://xll0328.github.io/fts/) for heatmaps. |
+<p align="center">
+  <img src="figures/fig1.png" alt="TS vs FTS under 10 random seeds" width="90%" />
+</p>
+<p align="center"><strong>Ten different random seeds are selected to train TimeSieve (TS) and Faithful TimeSieve (FTS) respectively.</strong></p>
+
+---
+
+## Heatmaps (from paper)
+
+Prediction length 48, 96, 144, 192. See [project page](https://xll0328.github.io/fts/) for full heatmap figures.
 
 ---
 
