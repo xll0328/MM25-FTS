@@ -163,7 +163,7 @@ MM25-FTS/
 
 ## Data & Usage
 
-**Datasets:** ETT (ETTh1), Exchange, Wiki pageviews (see paper). Lookback $T = 2H$. Place data under `./data/` or set `--root_path` and `--data_path`.
+**Datasets:** ETT (ETTh1), Exchange, Wiki pageviews (see paper). Lookback T = 2H. Place data under `./data/` or set `--root_path` and `--data_path`.
 
 **Example (long-term forecasting with FTS):**
 
