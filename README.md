@@ -26,15 +26,29 @@
 
 **Faithful TimeSieve (FTS)** is an enhanced framework for improving the **reliability and robustness** of time series forecasting in multimedia-rich web settings (e.g. video streaming workloads, ad click prediction). While [TimeSieve](https://github.com/ninghuifeng/TimeSieve) achieves strong accuracy, it is sensitive to **random seeds**, **input noise**, **layer noise**, and **parameter perturbations**. FTS systematically detects and mitigates these unfaithfulness issues via a rigorous definition and three auxiliary losses:
 
-- **Similarity in IB Space (Sib)** — Filtered representations in the information-bottleneck space under perturbation stay close (within β, radius R₁).
-- **Consistency in Prediction Space (Cps)** — Predictions with original vs. fine-tuned weights differ by at most α₁.
-- **Stability in Noise Perturbations (Snp)** — Predictions under input perturbation δ (‖δ‖ ≤ R₂) differ by at most α₂.
+Formally, the three attributes are (ω = original weights, ω̃ = fine-tuned weights; D₁, D₂, D₃ are distances, ‖·‖ a norm):
+
+- **Sib (Similarity in IB Space):** D₁ between approximation/detail representations under perturbation ≤ β for all ‖δ‖ ≤ R₁.
+- **Cps (Consistency in Prediction Space):** D₂ between predictions under ω̃ and ω ≤ α₁.
+- **Snp (Stability in Noise Perturbations):** D₃ between predictions under x(t) and x(t)+δ ≤ α₂ for all ‖δ‖ ≤ R₂.
+
+Sib:
+
+$$D_1(\hat{\pi}_a(x(t)), \hat{\pi}_a(x(t)+\delta)) \leq \beta \quad \text{(and similarly for } \hat{\pi}_d\text{).}$$
+
+Cps:
+
+$$D_2(y(x(t), \tilde{\omega}), y(x(t), \omega)) \leq \alpha_1.$$
+
+Snp:
+
+$$D_3(y(x(t), \tilde{\omega}), y(x(t)+\delta, \tilde{\omega})) \leq \alpha_2.$$
 
 The total training objective is:
 
 $$\mathcal{L} = \mathcal{L}_{\mathrm{reg}} + \mathcal{L}_{\mathrm{IB}} + \lambda_1 \mathcal{L}_{\mathrm{sib}} + \lambda_2 \mathcal{L}_{\mathrm{cps}} + \lambda_3 \mathcal{L}_{\mathrm{snp}}$$
 
-Here **L_reg** is the regression loss, **L_IB** is the TimeSieve IB loss, and **L_sib**, **L_cps**, **L_snp** are the faithfulness auxiliary losses. FTS uses PGD to find worst-case perturbations and batched gradient updates for parameters, achieving **SOTA** on multiple benchmarks while improving stability and consistency.
+Here **L**<sub>reg</sub> is the regression loss, **L**<sub>IB</sub> is the TimeSieve IB loss, and **L**<sub>sib</sub>, **L**<sub>cps</sub>, **L**<sub>snp</sub> are the faithfulness auxiliary losses. FTS uses PGD to find worst-case perturbations and batched gradient updates for parameters, achieving **SOTA** on multiple benchmarks while improving stability and consistency.
 
 ---
 
@@ -64,7 +78,7 @@ Here **L_reg** is the regression loss, **L_IB** is the TimeSieve IB loss, and **
 
 **TimeSieve** uses wavelet decomposition (approximation π_a, detail π_d) and an Information Filtering and Compression Block (IFCB) with IB loss. FTS adds:
 
-- **Objective:** Minimize the sum of L_sib, L_cps, L_snp over fine-tuned weights; L_sib ties to distance D₁ in IB space, L_cps to D₂ between predictions, L_snp to D₃ under input perturbation.
+- **Objective:** Minimize the sum of **L**<sub>sib</sub>, **L**<sub>cps</sub>, **L**<sub>snp</sub> over fine-tuned weights; **L**<sub>sib</sub> ties to distance D₁ in IB space, **L**<sub>cps</sub> to D₂ between predictions, **L**<sub>snp</sub> to D₃ under input perturbation.
 - **PGD step:** At each iteration, update perturbation by gradient ascent on the sum of these distances (project to ‖δ‖ ≤ R), then update weights by gradient descent on the full loss.
 - **Lookback:** Input length T = 2H (twice the forecast horizon H).
 
@@ -74,7 +88,7 @@ Here **L_reg** is the regression loss, **L_IB** is the TimeSieve IB loss, and **
 
 ### Table 1: Forecasting results (no perturbation)
 
-Forecast length H ∈ {48, 96, 144, 192}, lookback T = 2H. **Bold** = best, *italic* = second best.
+Forecast length H ∈ {48, 96, 144, 192}, lookback T = 2H. Best: **bold**. Second best: *italics*.
 
 | Dataset | H | FTS (MAE / MSE) | TS (MAE / MSE) | Koopa | PatchTST | TSMixer | DLinear | NSTformer | LightTS | Autoformer |
 |---------|---|------------------|----------------|-------|----------|---------|---------|-----------|---------|------------|
@@ -108,13 +122,39 @@ Baseline seed 2021*. FTS is less sensitive to seeds; **Preference (%)** quantifi
 | 2029 | 0.1160 | 0.0879 | **94.69%** |
 | 2030 | 0.0897 | 0.0898 | **1.53%** |
 
-### Table 3: Robustness under perturbation (summary)
+### Table 3: Robustness under perturbation (MAE / MSE)
 
-NP = no perturbation, NPO = no perturbation with FTS optimization, IP = input perturbation, IPO = IP with optimization, ILP = intermediate-layer perturbation, ILPO = ILP with optimization. FTS (NPO/IPO/ILPO) consistently improves over TS (NP/IP/ILP); e.g. Wiki 48-step IP: MAE 0.433→0.367 (IPO), ILP: MAE 0.453→0.399 (ILPO). See paper for full table.
+NP = no perturbation, NPO = NP with FTS optimization, IP = input perturbation, IPO = IP with optimization, ILP = intermediate-layer perturbation, ILPO = ILP with optimization. Underline = FTS (improved).
 
-### Table 4: Loss ablation (ETTh1 & Exchange, MAE/MSE)
+| Dataset | H | NP (MAE/MSE) | NPO (MAE/MSE) | IP (MAE/MSE) | IPO (MAE/MSE) | ILP (MAE/MSE) | ILPO (MAE/MSE) |
+|---------|---|--------------|---------------|--------------|---------------|---------------|----------------|
+| Wiki | 48 | 0.323/0.490 | **0.305/0.467** | 0.433/0.608 | **0.367/0.531** | 0.453/0.590 | **0.399/0.551** |
+| Wiki | 96 | 0.266/0.433 | **0.262/0.430** | 0.405/0.575 | **0.321/0.482** | 0.367/0.681 | **0.329/0.613** |
+| Wiki | 144 | 0.270/0.447 | **0.268/0.445** | 0.409/0.600 | **0.326/0.542** | 0.375/0.967 | **0.305/0.723** |
+| Wiki | 192 | 0.276/0.452 | **0.273/0.447** | 0.408/0.580 | **0.327/0.493** | 0.404/1.548 | **0.366/1.165** |
+| ETTh1 | 48 | 0.361/0.341 | **0.360/0.340** | 0.386/0.375 | **0.376/0.361** | 0.437/0.456 | **0.392/0.392** |
+| ETTh1 | 96 | 0.384/0.377 | **0.383/0.376** | 0.411/0.424 | **0.404/0.408** | 0.415/0.422 | **0.401/0.397** |
+| ETTh1 | 144 | 0.397/0.393 | **0.396/0.391** | 0.422/0.437 | **0.413/0.422** | 0.483/0.520 | **0.447/0.472** |
+| ETTh1 | 192 | 0.408/0.404 | **0.406/0.402** | 0.431/0.445 | **0.420/0.426** | 0.443/0.451 | **0.428/0.430** |
+| Exchange | 48 | 0.140/0.043 | **0.139/0.042** | 0.220/0.102 | **0.186/0.073** | 0.160/0.045 | **0.148/0.044** |
+| Exchange | 96 | 0.197/0.086 | **0.196/0.084** | 0.265/0.131 | **0.237/0.104** | 0.221/0.102 | **0.202/0.092** |
+| Exchange | 144 | 0.243/0.124 | **0.242/0.123** | 0.312/0.175 | **0.271/0.141** | 0.292/0.164 | **0.253/0.149** |
+| Exchange | 192 | 0.292/0.179 | **0.287/0.170** | 0.345/0.239 | **0.307/0.178** | 0.331/0.205 | **0.304/0.190** |
 
-Full combination **L_total** = L_reg + L_IB + λ₁·L_sib + λ₂·L_cps + λ₃·L_snp achieves best. Removing L_snp, L_cps, or L_sib degrades robustness; see paper Table 4 for all variants.
+### Table 4: Loss ablation (ETTh1 & Exchange, MAE / MSE)
+
+**L**<sub>total</sub> = **L**<sub>reg</sub> + **L**<sub>IB</sub> + λ₁**L**<sub>sib</sub> + λ₂**L**<sub>cps</sub> + λ₃**L**<sub>snp</sub>. Best in **bold**, second in *italics*.
+
+| Dataset | H | **L**<sub>total</sub> | **L**<sub>no_snp</sub> | **L**<sub>no_cps</sub> | **L**<sub>no_sib</sub> | no (cps+sib) | no (snp+sib) | no (snp+cps) | no (all 3) |
+|---------|---|------------------------|------------------------|------------------------|------------------------|--------------|--------------|--------------|------------|
+| ETTh1 | 48 | **0.376/0.361** | 0.383/0.370 | 0.381/*0.363* | *0.378*/*0.361* | 0.381/0.365 | 0.383/0.370 | 0.384/0.372 | 0.382/0.371 |
+| ETTh1 | 96 | **0.404/0.408** | 0.409/0.419 | 0.405/0.410 | *0.404*/*0.408* | 0.404/0.410 | 0.410/0.419 | 0.411/0.421 | 0.410/0.420 |
+| ETTh1 | 144 | **0.413/0.422** | 0.423/0.431 | *0.413*/0.423 | 0.417/*0.422* | 0.414/0.422 | 0.423/0.431 | 0.423/0.430 | 0.420/0.429 |
+| ETTh1 | 192 | **0.420/0.426** | 0.425/0.433 | 0.428/0.431 | *0.423*/*0.426* | 0.425/0.430 | 0.428/0.433 | 0.430/0.433 | 0.427/0.429 |
+| Exchange | 48 | **0.186/0.073** | 0.195/*0.078* | 0.190/0.084 | 0.191/0.074 | *0.190*/0.085 | 0.195/0.078 | 0.197/0.083 | 0.195/0.080 |
+| Exchange | 96 | *0.237*/**0.104** | 0.238/0.112 | 0.242/0.126 | **0.235**/*0.106* | 0.242/0.126 | 0.238/0.112 | 0.244/0.139 | 0.241/0.137 |
+| Exchange | 144 | *0.271*/*0.141* | 0.277/0.150 | 0.281/0.177 | **0.270**/**0.139** | 0.281/0.178 | 0.278/0.150 | 0.280/0.192 | 0.280/0.188 |
+| Exchange | 192 | *0.307*/**0.178** | 0.309/0.191 | 0.317/0.236 | **0.305**/*0.180* | 0.318/0.236 | 0.310/0.188 | 0.314/0.254 | 0.314/0.254 |
 
 ---
 
